@@ -1,0 +1,11 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Knit = require(ReplicatedStorage.Packages.Knit)
+
+Knit.Start()
+	:andThen(function()
+		print("Client Started")
+		local spawner = Knit.GetService("SpawnerService")
+		-- request spawn (server will actually spawn)
+		spawner:SpawnObject("PartCoin", Vector3.new(0, 5, 0))
+	end)
+	:catch(warn)

@@ -29,6 +29,12 @@
       }
     },
 
+    "ServerStorage": {
+      "Scripts":{
+        "$path": "src/serverstorage"
+      }
+    },
+
     "Workspace": {
       "$properties": {
         "FilteringEnabled": true
