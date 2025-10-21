@@ -1,7 +1,15 @@
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+-- Spawnable Class
 local Spawnable = {}
 Spawnable.__index = Spawnable
 
-function Spawnable.new(templateName, position)
+-- Collections
+local Assets = ReplicatedStorage:WaitForChild("Assets")
+
+function Spawnable.new(templateName: string, position: Vector3)
 	local self = setmetatable({}, Spawnable)
 	self.TemplateName = templateName
 	self.Position = position
@@ -10,17 +18,23 @@ function Spawnable.new(templateName, position)
 end
 
 function Spawnable:Spawn()
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-	local assets = ReplicatedStorage:WaitForChild("Assets")
-	local template = assets:FindFirstChild(self.TemplateName)
+	local template = Assets:WaitForChild(self.TemplateName)
 
 	if not template then
 		warn("Template not found:", self.TemplateName)
-		return
+		for _, child in ipairs(Assets:GetChildren()) do
+			print(" Available Assets ", child.Name)
+		end
+		return nil
 	end
 
-	self.Instance = template:Clone()
-	self.Instance.Parent = workspace
+	local clone = template:Clone()
+	clone.Position = self.Position or Vector3.new(0, 0, 0)
+	clone.Parent = Workspace
+
+	self.Instance = clone
+	-- print(`[Spawnable] Spawned {self.TemplateName} at {tostring(self.Position)}`)
+	return clone
 end
 
 function Spawnable:Destroy()
@@ -29,4 +43,5 @@ function Spawnable:Destroy()
 		self.Instance = nil
 	end
 end
+
 return Spawnable
