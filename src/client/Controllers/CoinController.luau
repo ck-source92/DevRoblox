@@ -5,9 +5,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage.Packages
 local Knit = require(Packages.Knit)
 
--- SpawnerController
-local SpawnerController = Knit.CreateController({
-	Name = "SpawnerController",
+-- CoinController
+local CoinController = Knit.CreateController({
+	Name = "CoinController",
 })
 
-return SpawnerController
+return CoinController

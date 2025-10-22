@@ -3,21 +3,21 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 -- Spawnable Class
-local Spawnable = {}
-Spawnable.__index = Spawnable
+local Coin = {}
+Coin.__index = Coin
 
 -- Collections
 local Assets = ReplicatedStorage:WaitForChild("Assets")
 
-function Spawnable.new(templateName: string, position: Vector3)
-	local self = setmetatable({}, Spawnable)
+function Coin.new(templateName: string, position: Vector3)
+	local self = setmetatable({}, Coin)
 	self.TemplateName = templateName
 	self.Position = position
 	self.Instance = nil
 	return self
 end
 
-function Spawnable:Spawn()
+function Coin:Spawn()
 	local template = Assets:WaitForChild(self.TemplateName)
 
 	if not template then
@@ -37,11 +37,11 @@ function Spawnable:Spawn()
 	return clone
 end
 
-function Spawnable:Destroy()
+function Coin:Destroy()
 	if self.Instance then
 		self.Instance:Destroy()
 		self.Instance = nil
 	end
 end
 
-return Spawnable
+return Coin

@@ -1,6 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 
-Knit.AddServices(script.Parent.Services)
+local KillZoneController = Knit.CreateController({
+	Name = "KillZoneController",
+})
 
-Knit.Start():catch(warn)
+return KillZoneController

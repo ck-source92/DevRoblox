@@ -3,4 +3,4 @@ local Knit = require(ReplicatedStorage.Packages.Knit)
 
 Knit.AddControllers(script.Parent:WaitForChild("Controllers"))
 
-Knit.Start():andThen(function() end):catch(warn)
+Knit.Start():catch(warn)
