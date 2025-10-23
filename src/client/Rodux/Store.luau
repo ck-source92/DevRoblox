@@ -9,13 +9,13 @@ local Rodux = require(ReplicatedStorage.Packages.Rodux)
 local Reducers = StarterPlayer.StarterPlayerScripts.Client.Rodux.Reducers
 
 -- Reducers
-local PointsReducers = require(Reducers.PointReducers)
+local PointReducers = require(Reducers.PointReducers)
 
 -- Store
 local StoreReducers = Rodux.combineReducers({
-	PointsReducers = PointsReducers,
+	PointsReducers = PointReducers,
 })
 
 local Store = Rodux.Store.new(StoreReducers, nil, {})
-
+print("store, ", Store:getState())
 return Store

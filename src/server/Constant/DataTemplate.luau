@@ -1,0 +1,3 @@
+return {
+	TemplateData = 1,
+}

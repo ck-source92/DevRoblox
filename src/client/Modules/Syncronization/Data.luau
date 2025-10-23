@@ -3,23 +3,40 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 local Store = require(StarterPlayer.StarterPlayerScripts.Client.Rodux.Store)
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local Rodux = require(ReplicatedStorage.Packages.Rodux)
+
+-- Actions
+local Actions = StarterPlayer.StarterPlayerScripts.Client.Rodux.Actions
+local PointsActions = require(Actions.PointsActions)
 
 -- Properties
 local Data = {}
 
-local Actions = StarterPlayer.StarterPlayerScripts.Client.Rodux.Actions
-
--- Actions
-local PointsActions = require(Actions.PointsActions)
-
 -- Functions
 function Data:Init()
+	print("[Data] Started")
+	local DataService = Knit.GetService("DataService")
 	local PointsService = Knit.GetService("PointService")
 
-	PointsService.PointsChanged:Connect(function(points: table)
-		Store.dispatch(PointsActions.setPoints(points.points))
+	local success, points = pcall(function()
+		return PointsService:GetPoints() -- Knit automatically sends LocalPlayer
 	end)
+
+	if success then
+		print("[Data] Initial points:", points)
+		Store:dispatch(PointsActions.setPoints(points))
+	else
+		warn("[Data] Failed to get points:", points)
+	end
+
+	DataService:GetData():andThen(function(data)
+		Store:dispatch(PointsActions.setPoints(data.points))
+		-- PointsService.PointsChanged:Connect(function(player, points)
+		-- 	print("[point service points changed] player : ", player.Name("point : "), points)
+
+		-- end)
+	end)
+
+	print("[Data] Finish")
 end
 
 return Data
