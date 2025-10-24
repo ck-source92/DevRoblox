@@ -7,11 +7,11 @@ local Roduxhooks = require(ReplicatedStorage.Packages.Roduxhooks)
 local e = Roact.createElement
 
 function PointsApp(_, hooks)
-	-- local PointsReducers = Roduxhooks.useSelector(hooks, function(state)
-	-- 	return state.PointsReducers
-	-- end)
+	local PointReducers = Roduxhooks.useSelector(hooks, function(state)
+		return state.PointReducers
+	end)
 
-	-- print("poinnts reducers : ", PointsReducers.CurrentPoints)
+	print("poinnts reducers : ", PointReducers.CurrentPoints)
 
 	return e("ScreenGui", { ResetOnSpawn = false }, {
 		Main = e("Frame", {

@@ -17,21 +17,21 @@ function Data:Init()
 	local DataService = Knit.GetService("DataService")
 	local PointsService = Knit.GetService("PointService")
 
-	local success, points = pcall(function()
-		return PointsService:GetPoints() -- Knit automatically sends LocalPlayer
-	end)
+	-- local success, points = pcall(function()
+	-- 	return PointsService:GetPoints() -- Knit automatically sends LocalPlayer
+	-- end)
 
-	if success then
-		print("[Data] Initial points:", points)
-		Store:dispatch(PointsActions.setPoints(points))
-	else
-		warn("[Data] Failed to get points:", points)
-	end
+	-- if success then
+	-- 	print("[Data] Initial points:", points)
+	-- 	Store:dispatch(PointsActions.setPoints(10))
+	-- else
+	-- 	warn("[Data] Failed to get points:", points)
+	-- end
 
 	DataService:GetData():andThen(function(data)
-		Store:dispatch(PointsActions.setPoints(data.points))
+		Store:dispatch(PointsActions.setPoints(1))
 		-- PointsService.PointsChanged:Connect(function(player, points)
-		-- 	print("[point service points changed] player : ", player.Name("point : "), points)
+		print("[point] point : ", data.points)
 
 		-- end)
 	end)

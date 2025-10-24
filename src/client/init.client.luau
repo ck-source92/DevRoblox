@@ -11,24 +11,23 @@ for _, file in pairs(script.Controllers:GetChildren()) do
 	require(file)
 end
 
-local PointsApp = require(StarterPlayer.StarterPlayerScripts.Client.Roact.Applications.Points.Applications)
+-- local PointsApp = require(StarterPlayer.StarterPlayerScripts.Client.Roact.Applications.Points.Applications)
 local Store = require(StarterPlayer.StarterPlayerScripts.Client.Rodux.Store)
 
 Knit.Start()
 	:andThen(function()
 		print("Knit Client Started")
+
+		local Root = require(script.Roact.Applications.Root.Application)
+		local Sync = require(StarterPlayer.StarterPlayerScripts.Client.Modules.Syncronization)
+		Sync()
+
+		Roact.mount(
+			Roact.createElement(RoactRodux.StoreProvider, { store = Store }, {
+				GameScreenGui = Roact.createElement(Root.Game),
+			}),
+			Players.LocalPlayer.PlayerGui,
+			"UI"
+		)
 	end)
 	:catch(warn)
-
-local Root = require(script.Roact.Applications.Root.Application)
-local Sync = require(StarterPlayer.StarterPlayerScripts.Client.Modules.Syncronization)
-Sync()
-
-Roact.mount(
-	Roact.createElement(RoactRodux.StoreProvider, { store = Store }, {
-		App = Roact.createElement(PointsApp),
-		-- GameScreenGui = Roact.createElement(Root.Game),
-	}),
-	Players.LocalPlayer.PlayerGui,
-	"UI"
-)

@@ -13,7 +13,7 @@ local PointReducers = require(Reducers.PointReducers)
 
 -- Store
 local StoreReducers = Rodux.combineReducers({
-	PointsReducers = PointReducers,
+	PointReducers = PointReducers,
 })
 
 local Store = Rodux.Store.new(StoreReducers, nil, {})

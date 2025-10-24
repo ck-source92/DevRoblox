@@ -13,6 +13,10 @@ end
 function PointController.KnitStart()
 	local PointsService = Knit.GetService("PointService")
 
+	PointsService.PointsChanged:Connect(function(amount)
+		print("point controller : ", amount)
+	end)
+
 	-- -- Observer (listener)
 	UserInputService.InputBegan:Connect(function(input, processed)
 		if processed then

@@ -12,7 +12,6 @@ local ContextStack = require(Contexts.ContextStack)
 
 -- Modules
 local Roact = require(ReplicatedStorage.Packages.Roact)
-local HUD = require(Applications.HUD.Application)
 
 --local GlobalHoveredFrame = require(Applications.GlobalHoveredFrame.Application)
 
@@ -27,7 +26,7 @@ Root = RoactHooks.new(Roact)(Root)
 
 local Frames = {
 	Hud = Roact.createElement(require(Applications.HUD.Application)),
-	Point = Roact.createElement(require(Applications.Points.Applications)),
+	Points = Roact.createElement(require(Applications.Points.Applications)),
 }
 
 -- Component
@@ -38,13 +37,19 @@ end
 -- Component
 local function GameFrame()
 	return Roact.createElement(Root, {}, {
-		GameScreenGui = Roact.createElement("ScreenGui", {
-			IgnoreGuiInset = true,
-			ZIndexBehavior = Enum.ZIndexBehavior.Global,
-			ResetOnSpawn = false,
-		}, {
-			HUD = Roact.createElement(HUD),
-		}),
+		GameScreenGui = Roact.createElement(
+			"ScreenGui",
+			{
+				IgnoreGuiInset = true,
+				ZIndexBehavior = Enum.ZIndexBehavior.Global,
+				ResetOnSpawn = false,
+			},
+			-- {
+			-- HUD = Roact.createElement(HUD),
+			-- Point = Roact.createElement(Points),
+			-- }
+			Frames
+		),
 	})
 end
 
