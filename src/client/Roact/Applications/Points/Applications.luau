@@ -7,11 +7,11 @@ local Roduxhooks = require(ReplicatedStorage.Packages.Roduxhooks)
 local e = Roact.createElement
 
 function PointsApp(_, hooks)
-	local PointReducers = Roduxhooks.useSelector(hooks, function(state)
-		return state.PointReducers
-	end)
+	-- local PointReducers = Roduxhooks.useSelector(hooks, function(state)
+	-- 	return state.PointReducers
+	-- end)
 
-	print("poinnts reducers : ", PointReducers.CurrentPoints)
+	-- print("poinnts reducers : ", PointReducers.CurrentPoints)
 
 	return e("ScreenGui", { ResetOnSpawn = false }, {
 		Main = e("Frame", {
@@ -21,7 +21,7 @@ function PointsApp(_, hooks)
 			BackgroundColor3 = Color3.fromRGB(35, 35, 35),
 		}, {
 			Label = e("TextLabel", {
-				Text = ("Points: %d"):format(10 or 0),
+				Text = "Point",
 				TextColor3 = Color3.new(1, 1, 1),
 				TextSize = 24,
 				Font = Enum.Font.GothamBold,
@@ -32,7 +32,6 @@ function PointsApp(_, hooks)
 				Text = "+5 Points",
 				Position = UDim2.fromScale(0.1, 0.6),
 				Size = UDim2.fromScale(0.8, 0.3),
-				-- [Roact.Event.Activated] = addServerPoints,
 			}),
 		}),
 	})

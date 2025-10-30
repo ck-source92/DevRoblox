@@ -20,6 +20,8 @@ function Data:Init()
 		Store:dispatch(PointsActions.setPoints(1))
 	end)
 
+	print("[Data] Data Player : ", Data)
+
 	print("[Data] Finish")
 end
 

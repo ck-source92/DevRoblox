@@ -68,7 +68,7 @@ end
 --[=[
 	Save player data on player removing
 ]=]
-function SaveData(player: Player)
+function DataService:SaveData(player: Player)
 	local profile = DataService.Profiles[player]
 	if profile ~= nil then
 		profile:Release()
@@ -112,7 +112,7 @@ function DataService:KnitInit()
 	Players.PlayerAdded:Connect(playerAdded)
 
 	local function playerRemoving(player: Player)
-		SaveData(player)
+		self:SaveData(player)
 	end
 	Players.PlayerRemoving:Connect(playerRemoving)
 end
