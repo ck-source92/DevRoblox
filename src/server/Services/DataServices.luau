@@ -40,10 +40,7 @@ end
 	Cache profile to DataService.Profiles
 ]=]
 local function InitAndCacheProfile(player: Player, profile: {})
-	local playerData = profile.Data
-	--CreateLeaderstats(player, playerData)
 	DataService.Profiles[player] = profile
-	print(player.Name .. "'s Data Succesfully Loaded!")
 end
 
 --[=[
@@ -106,7 +103,6 @@ end
 	Initializes player added and removing events
 ]=]
 function DataService:KnitInit()
-	print("DataService is running!")
 	local function playerAdded(player: Player)
 		LoadData(player)
 	end

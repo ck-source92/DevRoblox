@@ -21,7 +21,6 @@ function Coin:Spawn()
 	local template = Assets:WaitForChild(self.TemplateName)
 
 	if not template then
-		warn("Template not found:", self.TemplateName)
 		for _, child in ipairs(Assets:GetChildren()) do
 			print(" Available Assets ", child.Name)
 		end
@@ -33,7 +32,6 @@ function Coin:Spawn()
 	clone.Parent = Workspace
 
 	self.Instance = clone
-	-- print(`[Spawnable] Spawned {self.TemplateName} at {tostring(self.Position)}`)
 	return clone
 end
 
