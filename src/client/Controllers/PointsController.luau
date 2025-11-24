@@ -18,9 +18,6 @@ function PointController.KnitStart()
 			return
 		end
 		if input.KeyCode == Enum.KeyCode.E then
-			PointsService:GetPoints():andThen(PointsChanged)
-			PointsService.PointsChanged:Connect(PointsChanged)
-			PointsService:GiveMePoints(game.Players.LocalPlayer)
 		end
 	end)
 end

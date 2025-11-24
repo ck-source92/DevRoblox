@@ -4,7 +4,7 @@ local Rodux = require(ReplicatedStorage.Packages.Rodux)
 
 -- Trail Reducers
 local PointReducers = Rodux.createReducer({
-	-- Points = {},
+	Points = {},
 	CurrentPoints = 0,
 }, {
 	setPoints = function(state, action)
@@ -12,6 +12,11 @@ local PointReducers = Rodux.createReducer({
 		newState.CurrentPoints = action.value
 		return newState
 	end,
+	addPoints = function(state, action)
+		local newState = table.clone(state)
+		newState.Point = action.values
+		return newState
+	end
 })
 
 return PointReducers

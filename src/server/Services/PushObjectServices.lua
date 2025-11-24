@@ -7,20 +7,20 @@ local PointsService = nil
 local BOX_TAG = "PushBox"
 local DETECTOR_TAG = "BoxDetector"
 local SCORE_PER_BOX = 10
+local PUSH_MAX_DISTANCE = 10 -- how far in front of player we search
 
 local PushObjectServices = Knit.CreateService({
 	Name = "PushObjectServices",
 	Client = {},
 
-	_lastPusherByBox = {}, -- [BasePart] = Player
-	_boxConnections = {}, -- [BasePart] = RBXScriptConnection
-	_detectorConnections = {}, -- [BasePart] = RBXScriptConnection
-
 	_boxOwner = {}, -- [BasePart] = Player
 	_playerBox = {}, -- [Player] = BasePart
+	_playerBoxes = {}, -- [Player] = { [BasePart] = true, ... }
 	_boxScored = {}, -- [BasePart] = boolean
 	_boxTouchedConns = {}, -- [BasePart] = RBXScriptConnection
 	_detectorConns = {}, -- [BasePart] = RBXScriptConnection
+	_primaryBoxByPlayer = {},
+	_boxConstraints = {},
 })
 
 function PushObjectServices:KnitInit()
@@ -60,15 +60,223 @@ function PushObjectServices:KnitStart()
 	print("[Push Object Service Finished]")
 end
 
+function PushObjectServices:_attachPrimaryBoxToPlayer(box: BasePart, player: Player)
+	-- Don’t double-attach
+	if self._boxConstraints[box] then
+		return
+	end
+
+	local character = player.Character or player.CharacterAdded:Wait()
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+	if not hrp then
+		warn("[PushObjectService] _attachPrimaryBoxToPlayer: no HumanoidRootPart for", player.Name)
+		return
+	end
+
+	-- Reusable attachment on the player’s HRP
+	local hrpAttachment = hrp:FindFirstChild("PushBox_Attachment")
+	if not hrpAttachment then
+		hrpAttachment = Instance.new("Attachment")
+		hrpAttachment.Name = "PushBox_Attachment"
+		hrpAttachment.Parent = hrp
+
+		-- 4 studs in front of the player (tweak to taste)
+		hrpAttachment.Position = Vector3.new(0, 0, -4)
+	end
+
+	-- Make sure box can move
+	if box.Anchored then
+		box.Anchored = false
+	end
+
+	-- Attachment on the box
+	local boxAttachment = Instance.new("Attachment")
+	boxAttachment.Name = "PushBox_Attachment"
+	boxAttachment.Parent = box
+
+	-- Position follower
+	local alignPos = Instance.new("AlignPosition")
+	alignPos.Name = "PushBox_AlignPosition"
+	alignPos.ApplyAtCenterOfMass = true
+	alignPos.Responsiveness = 10 -- how fast it follows
+	alignPos.MaxForce = 100000 -- tweak if too weak/too strong
+	alignPos.Attachment0 = boxAttachment
+	alignPos.Attachment1 = hrpAttachment
+	alignPos.Parent = box
+
+	-- Orientation follower
+	local alignOri = Instance.new("AlignOrientation")
+	alignOri.Name = "PushBox_AlignOrientation"
+	alignOri.Responsiveness = 10
+	alignOri.MaxTorque = 100000
+	alignOri.Attachment0 = boxAttachment
+	alignOri.Attachment1 = hrpAttachment
+	alignOri.Parent = box
+
+	-- Optional: let this player own simulation for smoother movement
+	pcall(function()
+		box:SetNetworkOwner(player)
+	end)
+
+	self._boxConstraints[box] = {
+		alignPos = alignPos,
+		alignOri = alignOri,
+		attachment = boxAttachment,
+	}
+	self._primaryBoxByPlayer[player] = box
+
+	print(("[PushObjectService] Attached primary box %s to %s"):format(box.Name, player.Name))
+end
+
+function PushObjectServices:_detachPrimaryBox(box: BasePart, player: Player?)
+	local data = self._boxConstraints[box]
+	if data then
+		if data.alignPos then
+			data.alignPos:Destroy()
+		end
+		if data.alignOri then
+			data.alignOri:Destroy()
+		end
+		if data.attachment then
+			data.attachment:Destroy()
+		end
+		self._boxConstraints[box] = nil
+	end
+
+	if player and self._primaryBoxByPlayer[player] == box then
+		self._primaryBoxByPlayer[player] = nil
+	else
+		-- Fallback, in case we didn’t pass player
+		for p, b in pairs(self._primaryBoxByPlayer) do
+			if b == box then
+				self._primaryBoxByPlayer[p] = nil
+				break
+			end
+		end
+	end
+
+	print(("[PushObjectService] Detached primary box %s"):format(box.Name))
+end
+
+function PushObjectServices:_assignBoxToPlayer(box: BasePart, player: Players)
+	if self._boxScored[box] or box:GetAttribute("HasScored") then
+		print(("[PushObjectService] _assignBoxToPlayer: box %s already scored"):format(box.Name))
+		return
+	end
+
+	local currentOwner = self._boxOwner[box]
+	if currentOwner and currentOwner ~= player then
+		print(
+			("[PushObjectService] _assignBoxToPlayer: box %s already owned by %s, ignore %s"):format(
+				box.Name,
+				currentOwner.Name,
+				player.Name
+			)
+		)
+		return
+	end
+
+	self._boxOwner[box] = player
+	self._playerBoxes[player] = self._playerBoxes[player] or {}
+	self._playerBoxes[player][box] = true
+
+	print(("[PushObjectService] %s now owns box %s"):format(player.Name, box.Name))
+
+	-- NEW: if player has no primary box yet, attach this one
+	if not self._primaryBoxByPlayer[player] then
+		self:_attachPrimaryBoxToPlayer(box, player)
+	end
+end
+
 function PushObjectServices:_clearBoxOwner(box: BasePart)
 	local player = self._boxOwner[box]
-	if player then
-		if self._playerBox[player] == box then
-			self._playerBox[player] = nil
-		end
-		print(("[PushObjectServices] Clearing ownership: %s no longer owns box %s"):format(player.Name, box.Name))
+
+	-- NEW: detach if this box was their primary
+	if player and self._primaryBoxByPlayer[player] == box then
+		self:_detachPrimaryBox(box, player)
 	end
+
+	if player then
+		local set = self._playerBoxes[player]
+		if set then
+			set[box] = nil
+			if not next(set) then
+				self._playerBoxes[player] = nil
+			end
+		end
+
+		print(("[PushObjectService] Clear owner: %s no longer owns box %s"):format(player.Name, box.Name))
+	end
+
 	self._boxOwner[box] = nil
+end
+
+-- If one box has owner and the other doesn’t, copy owner (chain)
+function PushObjectServices:_handleBoxBoxTouch(boxA: BasePart, boxB: BasePart)
+	if boxA == boxB then
+		return
+	end
+
+	if self._boxScored[boxA] or boxA:GetAttribute("HasScored") then
+		return
+	end
+	if self._boxScored[boxB] or boxB:GetAttribute("HasScored") then
+		return
+	end
+
+	local ownerA = self._boxOwner[boxA]
+	local ownerB = self._boxOwner[boxB]
+
+	if ownerA and not ownerB then
+		self:_assignBoxToPlayer(boxB, ownerA)
+		print(
+			("[PushObjectService] Chain: box %s inherited owner %s from box %s"):format(
+				boxB.Name,
+				ownerA.Name,
+				boxA.Name
+			)
+		)
+	elseif ownerB and not ownerA then
+		self:_assignBoxToPlayer(boxA, ownerB)
+		print(
+			("[PushObjectService] Chain: box %s inherited owner %s from box %s"):format(
+				boxA.Name,
+				ownerB.Name,
+				boxB.Name
+			)
+		)
+	else
+		-- both owned or both nil → do nothing
+	end
+end
+
+function PushObjectServices:_handlePlayerTouchBox(player: Player, box: BasePart)
+	if self._boxScored[box] or box:GetAttribute("HasScored") then
+		print(("[PushObjectService] Player %s touched scored box %s, ignored"):format(player.Name, box.Name))
+		return
+	end
+
+	local currentOwner = self._boxOwner[box]
+
+	-- Already owned by same player
+	if currentOwner == player then
+		return
+	end
+
+	-- Owned by someone else
+	if currentOwner and currentOwner ~= player then
+		print(
+			("[PushObjectService] Box %s already owned by %s; ignore %s"):format(
+				box.Name,
+				currentOwner.Name,
+				player.Name
+			)
+		)
+		return
+	end
+
+	-- No owner → give to this player
+	self:_assignBoxToPlayer(box, player)
 end
 
 function PushObjectServices:_bindBox(box: BasePart)
@@ -79,6 +287,18 @@ function PushObjectServices:_bindBox(box: BasePart)
 	print("[PushObjectServices] Binding box:", box:GetFullName())
 
 	local conn = box.Touched:Connect(function(hit)
+		-- If box already scored, ignore all touches
+		if self._boxScored[box] or box:GetAttribute("HasScored") then
+			return
+		end
+
+		-- 1) Box ↔ Box chain touch
+		if hit:IsA("BasePart") and CollectionService:HasTag(hit, BOX_TAG) and hit ~= box then
+			self:_handleBoxBoxTouch(box, hit)
+			return
+		end
+
+		-- 2) Player ↔ Box touch
 		local character = hit.Parent
 		if not character then
 			return
@@ -89,42 +309,7 @@ function PushObjectServices:_bindBox(box: BasePart)
 			return
 		end
 
-		if self._boxScored[box] or box:GetAttribute("HasScored") then
-			print(("[PushObjectServices] Box %s already scored; ignore touch from %s"):format(box.Name, player.Name))
-			return
-		end
-
-		-- Already has an owner?
-		if self._boxOwner[box] then
-			if self._boxOwner[box] ~= player then
-				print(
-					("[PushObjectServices] Box %s already owned by %s; ignore %s"):format(
-						box.Name,
-						self._boxOwner[box].Name,
-						player.Name
-					)
-				)
-			end
-			return
-		end
-
-		-- Player already pushing another box?
-		if self._playerBox[player] and self._playerBox[player] ~= box then
-			print(
-				("[PushObjectServices] %s is already pushing box %s; ignore new box %s"):format(
-					player.Name,
-					self._playerBox[player].Name,
-					box.Name
-				)
-			)
-			return
-		end
-
-		-- Assign ownership
-		self._boxOwner[box] = player
-		self._playerBox[player] = box
-
-		print(("[PushObjectServices] %s is now pushing box %s"):format(player.Name, box.Name))
+		self:_handlePlayerTouchBox(player, box)
 	end)
 
 	self._boxTouchedConns[box] = conn
@@ -137,6 +322,7 @@ function PushObjectServices:_bindBox(box: BasePart)
 				c:Disconnect()
 			end
 			self._boxTouchedConns[box] = nil
+
 			self:_clearBoxOwner(box)
 			self._boxScored[box] = nil
 		end
@@ -181,7 +367,6 @@ end
 function PushObjectServices:_onBoxEnterDetector(box: BasePart, detector: BasePart)
 	print(("[PushObjectServices] Box %s touched detector %s"):format(box.Name, detector.Name))
 
-	-- 1. Make sure this box can only score once
 	if self._boxScored[box] or box:GetAttribute("HasScored") then
 		print(("[PushObjectServices] Box %s already scored previously, ignore"):format(box.Name))
 		return
@@ -206,15 +391,21 @@ function PushObjectServices:_onBoxEnterDetector(box: BasePart, detector: BasePar
 end
 
 function PushObjectServices:StopPushingBox(player: Player)
-	local box = self._playerBox[player]
-	if not box then
-		print(("[PushObjectServices] StopPushingBox: %s is not pushing any box"):format(player.Name))
+	local boxes = self._playerBoxes[player]
+	if not boxes then
+		print(("[PushObjectServices] StopPushingBox: %s is not pushing any boxes"):format(player.Name))
 		return
 	end
 
-	print(("[PushObjectServices] StopPushingBox: %s stopped pushing box %s manually"):format(player.Name, box.Name))
+	local count = 0
+	for box, _ in pairs(boxes) do
+		self:_clearBoxOwner(box)
+		count += 1
+	end
 
-	self:_clearBoxOwner(box)
+	self._playerBoxes[player] = nil
+
+	print(("[PushObjectServices] %s stopped pushing %d boxes"):format(player.Name, count))
 end
 
 -- Called from client when player presses E

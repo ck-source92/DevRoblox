@@ -17,5 +17,5 @@ local StoreReducers = Rodux.combineReducers({
 })
 
 local Store = Rodux.Store.new(StoreReducers, nil, {})
-print("[Store] Our Store : ", Store:getState())
+
 return Store

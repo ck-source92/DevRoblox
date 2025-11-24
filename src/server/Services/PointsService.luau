@@ -9,7 +9,6 @@ local Signal = require(ReplicatedStorage.Packages.Signal)
 local PointsService = Knit.CreateService({
 	Name = "PointsService",
 
-	-- Server-only state (will be set in KnitInit)
 	PointsPerPlayer = nil,
 	_internalPointsChanged = nil,
 	_rng = nil,
@@ -21,31 +20,26 @@ local PointsService = Knit.CreateService({
 	},
 })
 
---//////////////////////////////
---// Lifecycle
---//////////////////////////////
-
 function PointsService:KnitInit()
 	self.PointsPerPlayer = {}
 	self._internalPointsChanged = Signal.new()
 	self._rng = Random.new()
 
 	-- Internal observers (server-only listeners)
-	self._internalPointsChanged:Connect(function(player, newPoints, delta)
-		print(
-			string.format(
-				"[PointsService] Internal PointsChanged | player=%s delta=%d total=%d",
-				player.Name,
-				delta,
-				newPoints
-			)
-		)
-	end)
+	-- self._internalPointsChanged:Connect(function(player, newPoints, delta)
+	-- 	print(
+	-- 		string.format(
+	-- 			"[PointsService] Internal PointsChanged | player=%s delta=%d total=%d",
+	-- 			player.Name,
+	-- 			delta,
+	-- 			newPoints
+	-- 		)
+	-- 	)
+	-- end)
 end
 
 function PointsService:KnitStart()
 	local function initPlayer(player: Player)
-		-- Keep existing points if already set, otherwise 0
 		local current = self.PointsPerPlayer[player]
 		if current == nil then
 			current = 0
@@ -69,10 +63,6 @@ function PointsService:KnitStart()
 	end)
 end
 
---//////////////////////////////
---// Core API
---//////////////////////////////
-
 function PointsService:AddPoints(player: Player, amount: number)
 	if not player or not player:IsA("Player") then
 		warn("[PointsService] AddPoints called with invalid player:", player)
@@ -95,10 +85,8 @@ function PointsService:AddPoints(player: Player, amount: number)
 
 	print(string.format("[PointsService] AddPoints: %s %+d (from %d to %d)", player.Name, amount, oldPoints, newPoints))
 
-	-- Server-only signal
 	self._internalPointsChanged:Fire(player, newPoints, amount)
 
-	-- Notify client listeners
 	self.Client.PointsChanged:Fire(player, newPoints, amount)
 end
 
