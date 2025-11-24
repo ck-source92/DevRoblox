@@ -8,6 +8,9 @@ local RoactRodux = require(ReplicatedStorage.Packages.RoactRodux)
 
 local Store = require(StarterPlayer.StarterPlayerScripts.Client.Rodux.Store)
 
+-- Knit.AddControllers(script.Parent.Controllers)
+Knit.AddControllersDeep(script:WaitForChild("Controllers"))
+
 Knit.Start()
 	:andThen(function()
 		print("[Client] Knit Client Started")
