@@ -26,7 +26,7 @@ Root = RoactHooks.new(Roact)(Root)
 
 local Frames = {
 	Hud = Roact.createElement(require(Applications.HUD.Application)),
-	Points = Roact.createElement(require(Applications.Points.Applications)),
+	-- Points = Roact.createElement(require(Applications.Points.Applications)),
 }
 
 -- Component
