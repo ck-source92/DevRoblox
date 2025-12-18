@@ -14,9 +14,9 @@ local PointReducers = Rodux.createReducer({
 	end,
 	addPoints = function(state, action)
 		local newState = table.clone(state)
-		newState.Point = action.values
+		newState.CurrentPoints = newState.CurrentPoints + action.value
 		return newState
-	end
+	end,
 })
 
 return PointReducers
