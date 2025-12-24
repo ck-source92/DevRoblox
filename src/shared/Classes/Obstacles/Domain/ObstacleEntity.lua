@@ -21,7 +21,6 @@ end
 
 function ObstacleEntity:Update(dt: number)
 	self.CurrentTimer = self.CurrentTimer + dt
-
 	if self.State == ObstacleState.VISIBLE then
 		if self.CurrentTimer >= self.ActiveDuration then
 			self:Hide()
@@ -35,14 +34,18 @@ end
 
 function ObstacleEntity:Hide()
 	self.State = ObstacleState.INVISIBLE
-	self.Transparency = 1
+	self.BasePart.Transparency = 1
 	self.CurrentTimer = 0
+
+	self.BasePart.Color = Color3.fromRGB(50, 231, 255)
 end
 
 function ObstacleEntity:Show()
 	self.State = ObstacleState.VISIBLE
-	self.Transparency = 0
+	self.BasePart.Transparency = 0
 	self.CurrentTimer = 0
+
+	self.BasePart.Color = Color3.fromRGB(255, 50, 50)
 end
 
 function ObstacleEntity:Reset()
@@ -54,10 +57,6 @@ function ObstacleEntity:SetRandomTimers()
 	self.ActiveDuration = math.random(3, 4)
 	self.InactiveDuration = math.random(2, 3)
 	self.CurrentTimer = 0
-end
-
-function ObstacleEntity:GetObstacle()
-	return self
 end
 
 return ObstacleEntity
