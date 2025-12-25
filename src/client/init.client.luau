@@ -10,6 +10,7 @@ local Store = require(StarterPlayer.StarterPlayerScripts.Client.Rodux.Store)
 
 -- Knit.AddControllers(script.Parent.Controllers)
 Knit.AddControllersDeep(script:WaitForChild("Controllers"))
+Knit.AddControllersDeep(script:WaitForChild("Features"))
 
 Knit.Start()
 	:andThen(function()

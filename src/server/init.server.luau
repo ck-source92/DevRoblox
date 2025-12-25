@@ -9,6 +9,7 @@ local Knit = require(ReplicatedStorage.Packages.Knit)
 -- end
 
 Knit.AddServicesDeep(script:WaitForChild("Services"))
+Knit.AddServicesDeep(script:WaitForChild("Features"))
 -- Knit.AddServices(script.Parent.Services)
 
 Knit.Start()
