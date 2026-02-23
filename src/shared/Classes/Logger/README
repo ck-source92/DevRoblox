@@ -1,0 +1,343 @@
+# Roblox Logger Module with Knit
+
+A comprehensive, production-ready logging system for Roblox built with **Clean Architecture** and **SOLID principles**. Designed to work seamlessly with the Knit framework.
+
+## 🏗️ Architecture Overview
+
+This logger follows **Clean Architecture** principles with clear separation of concerns:
+
+```
+┌─────────────────────────────────────────────────┐
+│            Presentation Layer                    │
+│  (LoggerService, LoggerController)              │
+└─────────────────┬───────────────────────────────┘
+                  │
+┌─────────────────┴───────────────────────────────┐
+│            Use Case Layer                        │
+│           (LogUseCase)                           │
+└─────────────────┬───────────────────────────────┘
+                  │
+┌─────────────────┴───────────────────────────────┐
+│         Repository Layer                         │
+│        (LogRepository)                           │
+└─────────────────┬───────────────────────────────┘
+                  │
+┌─────────────────┴───────────────────────────────┐
+│    Data Layer (Writers, Filters, Entities)      │
+│  (ConsoleLogWriter, DataStoreLogWriter, etc)    │
+└─────────────────────────────────────────────────┘
+```
+
+## 📁 File Structure
+
+```
+Logger/
+├── Data Classes
+│   ├── LogLevel.lua          # Log severity levels enum
+│   └── LogEntry.lua          # Log entry data model
+│
+├── Interfaces
+│   ├── ILogWriter.lua        # Writer contract
+│   └── ILogFilter.lua        # Filter contract
+│
+├── Implementations
+│   ├── Writers
+│   │   ├── ConsoleLogWriter.lua      # Output to console
+│   │   └── DataStoreLogWriter.lua    # Persist to DataStore
+│   │
+│   └── Filters
+│       ├── LevelLogFilter.lua        # Filter by log level
+│       └── ContextLogFilter.lua      # Filter by context
+│
+├── Repository
+│   └── LogRepository.lua     # Data access layer
+│
+├── Use Cases
+│   └── LogUseCase.lua        # Business logic
+│
+├── Knit Integration
+│   ├── LoggerService.lua     # Server-side service
+│   └── LoggerController.lua  # Client-side controller
+│
+└── Examples
+    ├── ServerExample.lua
+    └── ClientExample.lua
+```
+
+## ✨ SOLID Principles Applied
+
+### 1. **Single Responsibility Principle (SRP)**
+- `LogEntry`: Only represents a log entry
+- `LogRepository`: Only handles data access
+- `LogUseCase`: Only contains business logic
+- `ConsoleLogWriter`: Only writes to console
+- Each class has one reason to change
+
+### 2. **Open/Closed Principle (OCP)**
+- Add new writers without modifying existing code
+- Add new filters without modifying existing code
+- Extensible through interfaces
+
+### 3. **Liskov Substitution Principle (LSP)**
+- All writers implement `ILogWriter` interface
+- All filters implement `ILogFilter` interface
+- Writers/filters are interchangeable
+
+### 4. **Interface Segregation Principle (ISP)**
+- Separate interfaces for writers and filters
+- Clients only depend on methods they use
+
+### 5. **Dependency Inversion Principle (DIP)**
+- High-level modules (Service/Controller) depend on abstractions (Use Cases)
+- Use Cases depend on Repository abstraction
+- Implementations depend on interfaces
+
+## 🚀 Installation
+
+1. Place the Logger folder in `ReplicatedStorage`
+2. Ensure Knit is installed in `ReplicatedStorage.Packages`
+
+```
+ReplicatedStorage/
+├── Packages/
+│   └── Knit/
+└── Logger/
+    └── (all logger files)
+```
+
+## 📖 Usage
+
+### Server-Side (LoggerService)
+
+```lua
+local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
+
+-- Start Knit
+Knit.Start():andThen(function()
+    local LoggerService = Knit.GetService("LoggerService")
+    
+    -- Basic logging
+    LoggerService:Info("Server started", "System")
+    LoggerService:Debug("Loading configuration...", "Config")
+    LoggerService:Warn("Low memory detected", "System", { memory = "75%" })
+    LoggerService:Error("Failed to load data", "DataService")
+    
+    -- With metadata
+    LoggerService:Info("Player joined", "PlayerService", {
+        userId = 12345,
+        userName = "Player1"
+    })
+end)
+```
+
+### Client-Side (LoggerController)
+
+```lua
+local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
+
+-- Start Knit
+Knit.Start():andThen(function()
+    local LoggerController = Knit.GetController("LoggerController")
+    
+    -- Basic logging
+    LoggerController:Info("UI loaded", "UI")
+    LoggerController:Error("Failed to connect", "Network")
+    
+    -- Logs are sent to server based on threshold
+    LoggerController:SetSendThreshold(LogLevel.WARN) -- Only send WARN+ to server
+end)
+```
+
+## 🔧 Configuration
+
+### Set Minimum Log Level
+
+```lua
+local LogLevel = require(game:GetService("ReplicatedStorage").Logger.LogLevel)
+LoggerService:SetMinLogLevel(LogLevel.DEBUG) -- Show all logs
+```
+
+### Add Custom Writer
+
+```lua
+local MyCustomWriter = {}
+function MyCustomWriter.new()
+    return setmetatable({}, { __index = MyCustomWriter })
+end
+
+function MyCustomWriter:Write(logEntry)
+    -- Custom logic here
+end
+
+function MyCustomWriter:Flush() end
+function MyCustomWriter:Close() end
+
+LoggerService:AddWriter(MyCustomWriter.new())
+```
+
+### Add Custom Filter
+
+```lua
+local MyFilter = {}
+function MyFilter.new()
+    return setmetatable({}, { __index = MyFilter })
+end
+
+function MyFilter:ShouldLog(logEntry)
+    -- Return true to allow, false to filter out
+    return logEntry.level >= LogLevel.WARN
+end
+
+LoggerService:AddFilter(MyFilter.new())
+```
+
+## 📊 Query Logs
+
+```lua
+-- Get recent logs
+local logs = LoggerService:GetRecentLogs(50)
+
+-- Get logs by level
+local errors = LoggerService:GetLogsByLevel(LogLevel.ERROR)
+
+-- Get logs by context
+local uiLogs = LoggerService:GetLogsByContext("UI")
+
+-- Print logs
+for _, log in ipairs(logs) do
+    print(log:ToString())
+end
+```
+
+## 🎯 Features
+
+- ✅ **Multi-level logging** (DEBUG, INFO, WARN, ERROR, FATAL)
+- ✅ **Multiple output destinations** (Console, DataStore)
+- ✅ **Filtering system** (Level-based, Context-based)
+- ✅ **In-memory log history**
+- ✅ **Client-to-Server logging**
+- ✅ **Metadata support**
+- ✅ **Stack traces** (automatic)
+- ✅ **Timestamps** (automatic)
+- ✅ **Extensible architecture**
+- ✅ **Type-safe** (with Luau types)
+
+## 🏢 Log Levels
+
+```lua
+LogLevel.DEBUG = 1  -- Detailed diagnostic information
+LogLevel.INFO = 2   -- General informational messages
+LogLevel.WARN = 3   -- Warning messages
+LogLevel.ERROR = 4  -- Error messages
+LogLevel.FATAL = 5  -- Critical errors
+```
+
+## 🔌 Extending the Logger
+
+### Create a Custom Writer
+
+```lua
+-- HttpLogWriter.lua
+local HttpService = game:GetService("HttpService")
+
+local HttpLogWriter = {}
+HttpLogWriter.__index = HttpLogWriter
+
+function HttpLogWriter.new(endpoint)
+    local self = setmetatable({}, HttpLogWriter)
+    self.endpoint = endpoint
+    return self
+end
+
+function HttpLogWriter:Write(logEntry)
+    local data = {
+        timestamp = logEntry.timestamp,
+        level = logEntry.level,
+        message = logEntry.message,
+        context = logEntry.context
+    }
+    
+    HttpService:PostAsync(self.endpoint, HttpService:JSONEncode(data))
+end
+
+function HttpLogWriter:Flush() end
+function HttpLogWriter:Close() end
+
+return HttpLogWriter
+```
+
+Then add it:
+```lua
+local HttpLogWriter = require(path.to.HttpLogWriter)
+LoggerService:AddWriter(HttpLogWriter.new("https://your-endpoint.com/logs"))
+```
+
+## 🧪 Testing
+
+The architecture makes testing easy through dependency injection:
+
+```lua
+-- Mock writer for testing
+local MockWriter = {}
+function MockWriter.new()
+    local self = { logs = {} }
+    return setmetatable(self, { __index = MockWriter })
+end
+
+function MockWriter:Write(logEntry)
+    table.insert(self.logs, logEntry)
+end
+
+-- Test
+local repository = LogRepository.new()
+local mockWriter = MockWriter.new()
+repository:AddWriter(mockWriter)
+
+local useCase = LogUseCase.new(repository)
+useCase:Info("Test message")
+
+assert(#mockWriter.logs == 1)
+```
+
+## 📝 Best Practices
+
+1. **Use appropriate log levels**
+   - DEBUG: Development/diagnostic info
+   - INFO: General application flow
+   - WARN: Unexpected but handled situations
+   - ERROR: Errors that need attention
+   - FATAL: Critical errors
+
+2. **Add context to logs**
+   ```lua
+   LoggerService:Info("Operation completed", "ModuleName")
+   ```
+
+3. **Include metadata for complex scenarios**
+   ```lua
+   LoggerService:Error("Database query failed", "Database", {
+       query = "SELECT * FROM users",
+       errorCode = 500
+   })
+   ```
+
+4. **Use filters to reduce noise**
+   - Set appropriate minimum log levels for production
+   - Use context filters for specific debugging
+
+## 🤝 Contributing
+
+This module follows clean architecture principles. When adding features:
+
+1. Create interfaces in the appropriate layer
+2. Implement concrete classes
+3. Follow SOLID principles
+4. Update documentation
+
+## 📄 License
+
+MIT License - Feel free to use in your projects!
+
+## 🙏 Credits
+
+Built with ❤️ using Clean Architecture and SOLID principles

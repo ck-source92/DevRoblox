@@ -1,4 +1,5 @@
-local LogLevel = require(script.Parent.LogLevel)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LogLevel = require(ReplicatedStorage.Shared.Classes.Logger.Entities.LogLevel)
 
 local ConsoleLogWriter = {}
 ConsoleLogWriter.__index = ConsoleLogWriter
@@ -8,17 +9,33 @@ function ConsoleLogWriter.new()
 	return self
 end
 
-function ConsoleLogWriter.Write(logEntry)
-	local levelName = LogLevel.Names[logEntry.level] or "UNKNOWN"
+function ConsoleLogWriter:Write(logEntry)
+	-- Validate logEntry
+	if not logEntry or type(logEntry) ~= "table" then
+		warn("[ConsoleLogWriter] Invalid log entry received")
+		return
+	end
+
+	local timestamp
+	if type(logEntry.GetFormattedTimestamp) == "function" then
+		timestamp = logEntry:GetFormattedTimestamp()
+	elseif logEntry.timestamp then
+		timestamp = os.date("%Y-%m-%d %H:%M:%S", logEntry.timestamp)
+	else
+		timestamp = os.date("%Y-%m-%d %H:%M:%S")
+	end
+
+	local levelName = LogLevel.Names[logEntry.level] or tostring(logEntry.level) or "UNKNOWN"
 	local formattedMessage = string.format(
 		"[%s] [%s]%s %s",
-		logEntry:GetFormattedTimestamp(),
+		timestamp,
 		levelName,
 		logEntry.context and (" [" .. logEntry.context .. "]") or "",
-		logEntry.message
+		logEntry.message or "No message"
 	)
 
-	if levelName == LogLevel.ERROR or levelName == LogLevel.FATAL then
+	-- Use appropriate output function based on log level
+	if logEntry.level == LogLevel.ERROR or logEntry.level == LogLevel.FATAL then
 		warn(formattedMessage)
 		if logEntry.metadata then
 			warn("Metadata:", logEntry.metadata)
