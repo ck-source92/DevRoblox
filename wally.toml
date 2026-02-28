@@ -18,6 +18,7 @@ Rodux = "roblox/rodux@3.0.0"
 Hooks = "kampfkarren/roact-hooks@0.3.0"
 Roduxhooks = "solarhorizon/rodux-hooks@0.3.1"
 RoactSpring = "chriscerie/roact-spring@^1.1.6"
+TestEZ = "roblox/testez@0.4.1"
 #Animation = "rivrs/animation-module@0.1.26"
 #VFX = "release/vfx-module@0.0.11"
 

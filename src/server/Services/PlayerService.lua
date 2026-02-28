@@ -48,7 +48,7 @@ function PlayerService:PlayerAdded(player)
 	local playerEntity = PlayerEntity.new(player.UserId, player.Name)
 
 	if not self.PlayerRepository:Exists(player.UserId) then
-		self.PlayerRepository:Save(player)
+		self.PlayerRepository:Save(playerEntity)
 	end
 
 	self.PlayerJoined:Fire(player, playerEntity)

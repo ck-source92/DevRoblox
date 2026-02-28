@@ -1,0 +1,18 @@
+{
+    "languageMode": "nonstrict",
+    "globals": [
+        "describe",
+        "it",
+        "expect",
+        "beforeEach",
+        "afterEach",
+        "beforeAll",
+        "afterAll",
+        "FIXME",
+        "FOCUS",
+        "SKIP"
+    ],
+    "aliases": {
+        "TestEZ": "globalTypes.d.luau"
+    }
+}

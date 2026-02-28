@@ -2,7 +2,7 @@
 -- Domain/Wallet.spec.luau
 -- Unit tests for Wallet domain logic.
 
-local Wallet = require(script.Parent.Wallet)
+local Wallet = require(game:GetService("ReplicatedStorage").Shared.Features.Points.Domain.Wallet)
 
 return function()
 	describe("Wallet", function()
