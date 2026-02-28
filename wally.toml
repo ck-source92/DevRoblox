@@ -23,7 +23,7 @@ TestEZ = "roblox/testez@0.4.1"
 #VFX = "release/vfx-module@0.0.11"
 
 Networker = "leifstout/networker@0.3.0"
-
+ZonePlus = "pigxity/zoneplus@3.2.0"
 
 [server-dependencies]
 Profileservice = "firebird702/profileservice@1.1.0"

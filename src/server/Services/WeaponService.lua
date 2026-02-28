@@ -49,7 +49,6 @@ local function getWeaponTemplate(weaponName: string?): Tool?
 
 	local tool = WEAPONS_FOLDER:FindFirstChild(weaponName)
 	if not tool or not tool:IsA("Tool") then
-		warn(("[WeaponService] Weapon %q not found or not a Tool"):format(weaponName))
 		return nil
 	end
 
